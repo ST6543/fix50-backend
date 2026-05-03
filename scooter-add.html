@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Scooter toevoegen – Fix50</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>Fix50 – Scooter toevoegen</header>
+
+<div class="container">
+  <h2>Nieuwe scooter</h2>
+
+  <input id="merk" type="text" placeholder="Merk">
+  <input id="model" type="text" placeholder="Model">
+  <input id="kenteken" type="text" placeholder="Kenteken">
+  <input id="bouwjaar" type="number" placeholder="Bouwjaar">
+
+  <button id="saveBtn">Opslaan</button>
+  <div id="msg"></div>
+
+  <a class="link" href="home.html">Terug naar home</a>
+</div>
+
+<script>
+function requireLogin() {
+  if (!localStorage.getItem("token")) {
+    window.location = "login.html";
+  }
+}
+requireLogin();
+
+document.getElementById("saveBtn").onclick = async () => {
+  const merk = document.getElementById("merk").value.trim();
+  const model = document.getElementById("model").value.trim();
+  const kenteken = document.getElementById("kenteken").value.trim();
+  const bouwjaar = document.getElementById("bouwjaar").value.trim();
+  const msg = document.getElementById("msg");
+
+  msg.style.color = "#ff4d4d";
+  msg.textContent = "";
+
+  if (!merk || !model) {
+    msg.textContent = "Minimaal merk en model invullen.";
+    return;
+  }
+
+  const res = await fetch("/api/scooters", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    },
+    body: JSON.stringify({ merk, model, kenteken, bouwjaar })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    msg.textContent = data.error;
+    return;
+  }
+
+  msg.style.color = "#4dff4d";
+  msg.textContent = "Scooter opgeslagen!";
+};
+</script>
+</body>
+</html>

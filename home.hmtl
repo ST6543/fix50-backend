@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Fix50 – Home</title>
+    <link rel="stylesheet" href="account.css">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="wrap">
+        <h1>Fix50 – Home</h1>
+        <div id="userBar" class="user-bar">
+            Ingelogd als <span id="userNameLabel"></span>
+            <button onclick="logout()" class="btn ghost">Uitloggen</button>
+        </div>
+    </div>
+</header>
+
+<main class="wrap layout">
+
+    <section class="card">
+        <h2>Jouw voertuigen</h2>
+        <ul id="scooterList"></ul>
+        <p id="noScootersMsg" class="sub">Je hebt nog geen voertuigen opgeslagen.</p>
+
+        <button onclick="window.location='diagnose_start.html'" class="btn">
+            Diagnose starten
+        </button>
+    </section>
+
+    <section class="card">
+        <h2>Nieuw voertuig toevoegen</h2>
+
+        <label>Merk <input id="scooterMerk"></label>
+        <label>Model <input id="scooterModel"></label>
+        <label>Kenteken <input id="scooterKenteken"></label>
+        <label>Bouwjaar <input id="scooterBouwjaar"></label>
+
+        <button onclick="saveScooter()" class="btn">Opslaan</button>
+        <p id="scooterMessage"></p>
+    </section>
+
+</main>
+
+<script>
+function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    window.location = "login.html";
+}
+
+async function loadScooters() {
+    const token = localStorage.getItem("token");
+    if (!token) return window.location = "login.html";
+
+    const res = await fetch("/api/scooter/list", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const scooters = await res.json();
+    const list = document.getElementById("scooterList");
+    const noMsg = document.getElementById("noScootersMsg");
+
+    list.innerHTML = "";
+
+    if (!scooters.length) {
+        noMsg.style.display = "block";
+        return;
+    }
+
+    noMsg.style.display = "none";
+
+    scooters.forEach(s => {
+        list.innerHTML += `
+            <li><b>${s.merk} ${s.model}</b> – ${s.kenteken} (${s.bouwjaar})</li>
+        `;
+    });
+}
+
+async function saveScooter() {
+    const token = localStorage.getItem("token");
+    if (!token) return window.location = "login.html";
+
+    const merk = scooterMerk.value;
+    const model = scooterModel.value;
+    const kenteken = scooterKenteken.value;
+    const bouwjaar = scooterBouwjaar.value;
+
+    const res = await fetch("/api/scooter/add", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ merk, model, kenteken, bouwjaar })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        scooterMessage.innerText = "Voertuig opgeslagen!";
+        loadScooters();
+    }
+}
+
+window.onload = () => {
+    const username = localStorage.getItem("username");
+    if (!username) return window.location = "login.html";
+
+    document.getElementById("userNameLabel").innerText = username;
+    loadScooters();
+};
+</script>
+
+</body>
+</html>

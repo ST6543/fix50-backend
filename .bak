@@ -1,0 +1,120 @@
+// diagnose.js
+const problems = {
+  motor: ["Start niet", "Raar geluid", "Vermogensverlies", "Trilt", "Oververhit"],
+  remmen: ["Piepen", "Trillen", "Sponzig pedaal", "Slechte remkracht"],
+  elektronica: ["Dashboard foutmelding", "Lichten werken niet", "Startproblemen"],
+  versnellingsbak: ["Schokt", "Slipt", "Komt niet in versnelling"],
+  uitlaat: ["Luid geluid", "Stank", "Lekt"],
+  overig: ["Weet ik niet", "Algemeen probleem"]
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const typeGrid = document.getElementById('typeGrid');
+  const problemList = document.getElementById('problemList');
+  const questionBox = document.getElementById('questionBox');
+  const resultText = document.getElementById('resultText');
+
+  const stepProblems = document.getElementById('stepProblems');
+  const stepQuestions = document.getElementById('stepQuestions');
+  const stepResult = document.getElementById('stepResult');
+  const stepTypes = document.querySelector('#typeGrid').closest('.card');
+
+  // helpers
+  const show = el => el.classList.remove('hidden');
+  const hide = el => el.classList.add('hidden');
+
+  // click on type buttons
+  typeGrid.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-type]');
+    if (!btn) return;
+    const type = btn.dataset.type;
+    openProblems(type);
+  });
+
+  function openProblems(type){
+    problemList.innerHTML = '';
+    problems[type].forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = p;
+      b.dataset.problem = p;
+      b.dataset.type = type;
+      b.addEventListener('click', () => openQuestions(type, p));
+      problemList.appendChild(b);
+    });
+    hide(stepTypes);
+    show(stepProblems);
+    hide(stepQuestions);
+    hide(stepResult);
+  }
+
+  // open questions
+  function openQuestions(type, problem){
+    questionBox.innerHTML = '';
+    const q = document.createElement('div');
+    q.innerHTML = `
+      <p>Wanneer gebeurt het probleem?</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn" data-cond="koud">Bij koude start</button>
+        <button class="btn" data-cond="warm">Bij warme motor</button>
+        <button class="btn" data-cond="altijd">Altijd</button>
+      </div>
+    `;
+    // attach handlers
+    q.querySelectorAll('button[data-cond]').forEach(b => {
+      b.addEventListener('click', () => showResult(type, problem, b.dataset.cond));
+    });
+    questionBox.appendChild(q);
+    hide(stepProblems);
+    show(stepQuestions);
+    hide(stepResult);
+  }
+
+  // show result
+  function showResult(type, problem, condition){
+    const prettyType = {
+      motor: 'Motorblok',
+      remmen: 'Remmen',
+      elektronica: 'Elektronica',
+      versnellingsbak: 'Versnellingsbak',
+      uitlaat: 'Uitlaat',
+      overig: 'Overig'
+    }[type] || type;
+
+    resultText.textContent = `Op basis van je keuze (${problem}, ${condition}) lijkt het probleem te vallen onder: ${prettyType}.`;
+    hide(stepQuestions);
+    show(stepResult);
+  }
+
+  // back buttons
+  document.getElementById('backToTypes').addEventListener('click', () => {
+    show(stepTypes);
+    hide(stepProblems);
+    hide(stepQuestions);
+    hide(stepResult);
+  });
+  document.getElementById('backToProblems').addEventListener('click', () => {
+    show(stepProblems);
+    hide(stepQuestions);
+    hide(stepResult);
+  });
+  document.getElementById('startOver').addEventListener('click', () => {
+    show(stepTypes);
+    hide(stepProblems);
+    hide(stepQuestions);
+    hide(stepResult);
+  });
+});
+
+// progress helper (3 steps)
+function setProgress(stepIndex){
+  const fills = [document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3')];
+  fills.forEach((f,i)=>{
+    if(i < stepIndex) f.style.width = '100%';
+    else if(i === stepIndex) f.style.width = '50%';
+    else f.style.width = '0%';
+  });
+}
+
+// call setProgress(0) on load, setProgress(1) when problems shown, setProgress(2) when questions shown, setProgress(3) when result shown
+document.addEventListener('DOMContentLoaded', ()=> setProgress(0));

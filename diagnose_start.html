@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Nieuwe Diagnose – Fix50</title>
+    <style>
+        body { background:#1a1a1a; color:white; font-family:Arial; margin:0; }
+        .card { background:#333; padding:20px; border-radius:12px; max-width:600px; margin:40px auto; }
+        h2 { color:#ff7b00; }
+        .btn { background:#ff7b00; padding:10px 15px; border-radius:8px; color:white; text-decoration:none; font-weight:bold; display:block; margin-top:20px; text-align:center; }
+        select { width:100%; padding:10px; border-radius:8px; margin-top:10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Nieuwe Diagnose</h2>
+    <p>Kies het symptoom dat je scooter heeft.</p>
+
+    <select id="symptoom">
+        <option value="">-- Kies een symptoom --</option>
+    </select>
+
+    <a class="btn" onclick="startDiagnose()">Start diagnose</a>
+</div>
+
+<script src="diagnose.js"></script>
+<script>
+    loadSymptomen(); // vult dropdown
+</script>
+
+</body>
+</html>

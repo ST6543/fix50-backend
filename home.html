@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix50 – Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>Fix50 – Home</header>
+
+<div class="container">
+  <h2>Welkom bij Fix50</h2>
+
+  <button onclick="window.location='diagnose.html'">Diagnose starten</button>
+
+  <div id="loggedOut">
+    <button onclick="window.location='login.html'">Inloggen</button>
+    <button onclick="window.location='register.html'">Account aanmaken</button>
+  </div>
+
+  <div id="loggedIn" style="display:none;">
+    <button onclick="window.location='scooter-add.html'">Scooter toevoegen</button>
+    <button onclick="window.location='onderhoud.html'">Onderhoudstracker</button>
+    <button onclick="logout()">Uitloggen</button>
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<script>
+function checkLogin() {
+  const token = localStorage.getItem("token");
+  if (token) {
+    document.getElementById("loggedOut").style.display = "none";
+    document.getElementById("loggedIn").style.display = "block";
+  } else {
+    document.getElementById("loggedOut").style.display = "block";
+    document.getElementById("loggedIn").style.display = "none";
+  }
+}
+function logout() {
+  localStorage.removeItem("token");
+  location.reload();
+}
+checkLogin();
+</script>
+</body>
+</html>

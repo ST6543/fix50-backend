@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Account Aanmaken – Fix50</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>Fix50 – Account Aanmaken</header>
+
+<div class="container">
+  <h2>Account Aanmaken</h2>
+
+  <input id="username" type="text" placeholder="Gebruikersnaam" required>
+  <input id="email" type="email" placeholder="E-mailadres">
+  <input id="password" type="password" placeholder="Wachtwoord" required>
+
+  <button id="registerBtn">Account aanmaken</button>
+  <div id="msg"></div>
+
+  <a class="link" href="login.html">Al een account? Log in</a>
+</div>
+
+<script>
+document.getElementById("registerBtn").onclick = async () => {
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
+
+  msg.style.color = "#ff4d4d";
+  msg.textContent = "";
+
+  if (!username || !password) {
+    msg.textContent = "Gebruikersnaam en wachtwoord verplicht.";
+    return;
+  }
+
+  const res = await fetch("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    msg.textContent = data.error;
+    return;
+  }
+
+  msg.style.color = "#4dff4d";
+  msg.textContent = "Account aangemaakt! Je wordt doorgestuurd...";
+  setTimeout(() => window.location = "login.html", 1000);
+};
+</script>
+</body>
+</html>

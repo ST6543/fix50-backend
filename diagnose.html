@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Fix50 Diagnose</title>
+<style>
+    body {
+        margin: 0;
+        background: #121212; /* zelfde donkergrijs als homepage */
+        color: #fff;
+        font-family: 'Inter', Arial, sans-serif;
+        animation: fadeIn 0.4s ease;
+    }
+
+    /* Fade-in animatie */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Slide-in animatie */
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(25px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .screen {
+        display: none;
+        animation: slideIn 0.35s ease;
+    }
+
+    .active {
+        display: block;
+    }
+
+    /* HEADER */
+    .header {
+        width: 100%;
+        background: #1c1c1c;
+        padding: 18px 30px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .logo {
+        font-size: 26px;
+        font-weight: 700;
+        color: #ff7b00;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #ff7b00;
+        margin-bottom: 25px;
+        font-size: 30px;
+        font-weight: 700;
+    }
+
+    /* Symptomen grid */
+    #symptomenGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .symptoomBtn {
+        background: #1c1c1c;
+        border: 2px solid #ff7b00;
+        padding: 22px;
+        border-radius: 16px;
+        text-align: center;
+        font-size: 18px;
+        cursor: pointer;
+        transition: 0.25s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        color: #fff;
+    }
+
+    .symptoomBtn:hover {
+        background: #ff7b00;
+        color: #000;
+        transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+    }
+
+    /* Test wizard */
+    #testCard {
+        background: #1c1c1c;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        animation: fadeIn 0.4s ease;
+        color: #fff;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 14px 22px;
+        margin: 10px;
+        background: #ff7b00;
+        color: #000;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: 0.25s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    .btn:hover {
+        background: #ffa64d;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+    }
+
+    /* Resultaat */
+    #resultCard {
+        background: #1c1c1c;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        max-width: 700px;
+        margin: 0 auto;
+        animation: fadeIn 0.4s ease;
+        color: #fff;
+    }
+
+    .resultBox {
+        background: #181818;
+        padding: 18px;
+        border-radius: 12px;
+        margin-top: 15px;
+        border-left: 4px solid #ff7b00;
+        animation: fadeIn 0.4s ease;
+    }
+</style>
+</head>
+<body>
+<div class="header">
+    <div class="logo">Fix50</div>
+    <div>
+        <a href="/account.html" style="color:#222; text-decoration:none; font-weight:600;">Account</a>
+    </div>
+</div>
+
+<div class="container">
+</div> <!-- end container -->
+
+
+<!-- SCHERM 1 -->
+<div id="screen1" class="screen active">
+    <h1>Kies een symptoom</h1>
+    <div id="symptomenGrid"></div>
+</div>
+
+<!-- SCHERM 2 -->
+<div id="screen2" class="screen">
+    <h1 id="testTitle"></h1>
+    <div id="testCard">
+        <p id="testText"></p>
+        <div>
+            <div class="btn" onclick="testResult(true)">Test geslaagd</div>
+            <div class="btn" onclick="testResult(false)">Test niet geslaagd</div>
+        </div>
+    </div>
+</div>
+
+<!-- SCHERM 3 -->
+<div id="screen3" class="screen">
+    <h1>Diagnose resultaat</h1>
+    <div id="resultCard">
+        <div class="resultBox" id="oorzaakBox"></div>
+        <div class="resultBox" id="oplossingBox"></div>
+        <div class="resultBox" id="blokinfoBox"></div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+        <div class="btn" onclick="location.reload()">Nieuwe diagnose</div>
+        <div class="btn" onclick="window.location='account.html'">Terug naar dashboard</div>
+    </div>
+</div>
+
+<script src="diagnose.js"></script>
+</body>
+</html>

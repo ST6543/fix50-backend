@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagnose Resultaat – Fix50</title>
+    <style>
+        body { background:#1a1a1a; color:white; font-family:Arial; margin:0; }
+        .card { background:#333; padding:20px; border-radius:12px; max-width:600px; margin:40px auto; }
+        h2 { color:#ff7b00; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Resultaat</h2>
+    <p><strong>Oorzaak:</strong> <span id="oorzaak"></span></p>
+    <p><strong>Oplossing:</strong> <span id="oplossing"></span></p>
+    <p><strong>Blok-specifieke info:</strong> <span id="blokinfo"></span></p>
+</div>
+
+<script src="diagnose.js"></script>
+<script>
+    laadResultaat();
+</script>
+
+</body>
+</html>
+

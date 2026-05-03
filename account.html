@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>Fix50 – Mijn account</title>
+  <link rel="stylesheet" href="account.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <h1>Fix50 – Mijn account</h1>
+    <div id="userBar" class="user-bar hidden">
+      Ingelogd als <span id="userNameLabel"></span>
+      <button id="logoutBtn" class="btn ghost">Uitloggen</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap layout">
+
+  <!-- LINKS: LOGIN / REGISTER -->
+  <section class="card" id="authCard">
+    <h2>Inloggen</h2>
+    <p class="sub">Log in om jouw scooters te beheren.</p>
+
+    <label>
+      Gebruikersnaam
+      <input type="text" id="loginUsername">
+    </label>
+
+    <label>
+      Wachtwoord
+      <input type="password" id="loginPassword">
+    </label>
+
+    <button id="loginBtn" class="btn">Inloggen</button>
+
+    <hr>
+
+    <h3>Nieuw bij Fix50?</h3>
+    <p class="sub">Maak een account aan om jouw scooter(s) op te slaan.</p>
+
+    <label>
+      Gebruikersnaam
+      <input type="text" id="regUsername">
+    </label>
+
+    <label>
+      E‑mail
+      <input type="email" id="regEmail">
+    </label>
+
+    <label>
+      Wachtwoord
+      <input type="password" id="regPassword">
+    </label>
+
+    <button id="registerBtn" class="btn ghost">Account aanmaken</button>
+
+    <p id="authMessage" class="msg"></p>
+  </section>
+
+  <!-- RECHTS: PERSOONLIJK DASHBOARD -->
+  <section class="card hidden" id="dashboardCard">
+    <h2>Welkom, <span id="welcomeName"></span></h2>
+    <p class="sub">Hier zie je jouw opgeslagen brommers/scooters.</p>
+
+    <h3>Jouw voertuigen</h3>
+    <ul id="scooterList" class="scooter-list"></ul>
+    <p id="noScootersMsg" class="sub">Je hebt nog geen voertuigen opgeslagen.</p>
+
+    <h3>Nieuw voertuig toevoegen</h3>
+    <div class="form-grid">
+      <label>
+        Merk
+        <input type="text" id="scooterMerk" placeholder="Bijv. Piaggio">
+      </label>
+      <label>
+        Model
+        <input type="text" id="scooterModel" placeholder="Bijv. Zip">
+      </label>
+      <label>
+        Kenteken
+        <input type="text" id="scooterKenteken" placeholder="Bijv. AB-12-34">
+      </label>
+      <label>
+        Bouwjaar
+        <input type="number" id="scooterBouwjaar" placeholder="Bijv. 2018">
+      </label>
+    </div>
+    <button id="saveScooterBtn" onclick="saveScooter()">Voertuig opslaan</button>
+
+    <p id="scooterMessage" class="msg"></p>
+  </section>
+
+</main>
+
+<script src="account.js?v=1"></script>
+
+<script>
+async function saveScooter() {
+    const merk = document.getElementById("scooterMerk").value;
+    const model = document.getElementById("scooterModel").value;
+    const kenteken = document.getElementById("scooterKenteken").value;
+    const bouwjaar = document.getElementById("scooterBouwjaar").value;
+
+    const res = await fetch("/api/scooter/add", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ merk, model, kenteken, bouwjaar })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        loadScooters();
+        document.getElementById("scooterMessage").innerText = "Scooter opgeslagen!";
+    }
+}
+</script>
+
+<script>
+async function loadScooters() {
+    const res = await fetch("/api/scooter/list", {
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    });
+
+    const scooters = await res.json();
+
+    const list = document.getElementById("scooterList");
+    list.innerHTML = "";
+
+    scooters.forEach(s => {
+        list.innerHTML += `
+            <li class="scooter-item">
+                <b>${s.merk} ${s.model}</b> – ${s.kenteken} (${s.bouwjaar})
+            </li>
+        `;
+    });
+}
+
+window.onload = loadScooters;
+</script>
+
+</body>
+</html>
+

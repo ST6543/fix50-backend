@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard – Fix50</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        header {
+            background-color: #ff7b00;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        nav {
+            background-color: #262626;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        nav a {
+            color: #ff7b00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #ff7b00;
+            margin-top: 0;
+        }
+
+        .btn {
+            background-color: #ff7b00;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #e56f00;
+        }
+
+        .scooter-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .scooter-list li {
+            background-color: #444;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<header>Fix50 – Dashboard</header>
+
+<nav>
+    <a href="#">Dashboard</a>
+    <a href="#">Mijn Scooters</a>
+    <a href="diagnose.html">Diagnose</a>
+    <a href="/logout">Uitloggen</a>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Welkom, Stein</h2>
+        <p>Hier zie je jouw scooters en kun je een nieuwe diagnose starten.</p>
+        <a class="btn" href="diagnose.html">Nieuwe Diagnose</a>
+    </div>
+
+<div class="card">
+    <h2>Mijn Scooters</h2>
+
+    <!-- Dynamische scooters komen vanuit de backend -->
+    <div id="scooters">
+        <!-- De backend vult dit automatisch -->
+    </div>
+
+    <h3>Scooter toevoegen</h3>
+    <form action="/add_scooter" method="POST">
+        <input name="merk" placeholder="Merk"><br><br>
+        <input name="model" placeholder="Model"><br><br>
+        <input name="bouwjaar" placeholder="Bouwjaar"><br><br>
+        <input name="kmstand" placeholder="Kilometerstand"><br><br>
+        <button class="btn" type="submit">Toevoegen</button>
+    </form>
+</div>
+
+    <div class="card">
+        <h2>Veelvoorkomende Problemen</h2>
+        <ul>
+            <li>Start niet</li>
+            <li>Loopt slecht</li>
+            <li>Wordt te heet</li>
+            <li>Geen vonk</li>
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>
+
+<a class="btn" href="diagnose.html">Nieuwe Diagnose</a>

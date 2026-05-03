@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Inloggen – Fix50</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>Fix50 – Inloggen</header>
+
+<div class="container">
+  <h2>Inloggen</h2>
+
+  <input id="username" type="text" placeholder="Gebruikersnaam" required>
+  <input id="password" type="password" placeholder="Wachtwoord" required>
+
+  <button id="loginBtn">Inloggen</button>
+  <div id="msg"></div>
+
+  <a class="link" href="register.html">Nog geen account? Maak er een</a>
+</div>
+
+<script>
+document.getElementById("loginBtn").onclick = async () => {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
+
+  msg.style.color = "#ff4d4d";
+  msg.textContent = "";
+
+  if (!username || !password) {
+    msg.textContent = "Alles invullen.";
+    return;
+  }
+
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    msg.textContent = data.error;
+    return;
+  }
+
+  localStorage.setItem("token", data.token);
+  window.location = "home.html";
+};
+</script>
+</body>
+</html>
