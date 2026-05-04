@@ -2,6 +2,7 @@
   "name": "fix50-backend",
   "version": "1.0.0",
   "description": "Fix50 backend voor Render",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -13,3 +14,4 @@
     "pg": "^8.11.1",
     "dotenv": "^16.3.1"
   }
+}
