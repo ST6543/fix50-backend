@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET = "fix50supersecret"; // later .env
+const SECRET = "fix50supersecret";
 const USERS_FILE = "./users.json";
 
 function loadUsers() {
@@ -22,10 +22,12 @@ function saveUsers(users) {
 
 app.post("/api/register", (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password)
     return res.status(400).json({ error: "Email en wachtwoord verplicht" });
 
   const users = loadUsers();
+
   if (users.find(u => u.email === email))
     return res.status(400).json({ error: "Gebruiker bestaat al" });
 
@@ -38,14 +40,17 @@ app.post("/api/register", (req, res) => {
 
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
+
   const users = loadUsers();
   const user = users.find(u => u.email === email);
+
   if (!user) return res.status(400).json({ error: "Onjuiste gegevens" });
 
   const match = bcrypt.compareSync(password, user.password);
   if (!match) return res.status(400).json({ error: "Onjuiste gegevens" });
 
   const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
+
   res.json({ token });
 });
 
