@@ -27,6 +27,8 @@
 const API_BASE = "https://fix50-backend-login-en-registratie.onrender.com";
 
 async function register() {
+    console.log("register() gestart");
+
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
@@ -37,14 +39,16 @@ async function register() {
     });
 
     const data = await res.json();
+    console.log("API antwoord:", data);
 
     if (data.success) {
         alert("Account aangemaakt!");
         location.href = "login.html";
     } else {
-        alert(data.error);
+        alert(data.error || "Er ging iets mis");
     }
 }
 </script>
+
 </body>
 </html>
