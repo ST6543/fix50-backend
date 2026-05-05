@@ -1,64 +1,53 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
-import pkg from "pg";
-
-dotenv.config();
-
-const { Pool } = pkg;
+import fs from "fs";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// DATABASE CONNECTIE (Render gebruikt ENV variabelen)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+const SECRET = "fix50supersecret"; // later .env
+const USERS_FILE = "./users.json";
+
+function loadUsers() {
+  if (!fs.existsSync(USERS_FILE)) return [];
+  return JSON.parse(fs.readFileSync(USERS_FILE));
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
+app.post("/api/register", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).json({ error: "Email en wachtwoord verplicht" });
+
+  const users = loadUsers();
+  if (users.find(u => u.email === email))
+    return res.status(400).json({ error: "Gebruiker bestaat al" });
+
+  const hashed = bcrypt.hashSync(password, 10);
+  users.push({ email, password: hashed });
+  saveUsers(users);
+
+  res.json({ success: true });
 });
 
-// TEST ROUTE
-app.get("/", (req, res) => {
-  res.send("Fix50 backend draait op Render!");
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+  const users = loadUsers();
+  const user = users.find(u => u.email === email);
+  if (!user) return res.status(400).json({ error: "Onjuiste gegevens" });
+
+  const match = bcrypt.compareSync(password, user.password);
+  if (!match) return res.status(400).json({ error: "Onjuiste gegevens" });
+
+  const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
+  res.json({ token });
 });
 
-// VOORBEELD: scooters ophalen
-app.get("/api/scooters", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM scooters");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Database fout" });
-  }
-});
-
-// PORT FIX VOOR RENDER
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server draait op poort ${PORT}`);
-});
-
-app.post("/api/register", async (req, res) => {
-    const { username, email, password } = req.body;
-
-    if (!username || !password) {
-        return res.json({ error: "Gebruikersnaam en wachtwoord verplicht" });
-    }
-
-    const hash = await bcrypt.hash(password, 10);
-
-    db.run(
-        "INSERT INTO users (username, email, passwordHash) VALUES (?, ?, ?)",
-        [username, email, hash],
-        err => {
-            if (err) {
-                return res.json({ error: "Gebruiker bestaat al" });
-            }
-            res.json({ success: true });
-        }
-    );
-});
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log("Fix50 backend draait op poort", port));
