@@ -2,92 +2,49 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Fix50 – Scooter Diagnose</title>
-    <p>Nog geen account? <a href="register.html">Registreren</a></p>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: white;
-        }
-
-        header {
-            background-color: #ff7b00;
-            padding: 20px;
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        .card {
-            background-color: #262626;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.4);
-        }
-
-        h2 {
-            color: #ff7b00;
-            margin-top: 0;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #ff7b00;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-
-        .btn:hover {
-            background-color: #e56f00;
-        }
-
-        .center {
-            text-align: center;
-        }
-    </style>
+    <title>Inloggen – Fix50</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<header>Fix50 – Scooter Diagnose</header>
+<header>
+    <img src="logo.png" alt="Fix50 Logo">
+</header>
 
-<div class="container">
+<div class="form-container">
+    <h2>Inloggen</h2>
 
-    <div class="card center">
-        <h2>Welkom bij Fix50</h2>
-        <p>Dé plek om jouw scooterproblemen snel en duidelijk te analyseren.</p>
-        <p>Maak een account aan om je scooters op te slaan en diagnoses bij te houden.</p>
+    <input id="email" type="email" placeholder="E-mail">
+    <input id="password" type="password" placeholder="Wachtwoord">
 
-        <a class="btn" href="login.html">Inloggen</a>
-        <a class="btn" href="register.html" style="margin-left: 10px;">Account aanmaken</a>
-        <a class="btn" href="diagnose.html" style="margin-left: 10px;">Diagnose starten</a>
+    <button onclick="login()">Inloggen</button>
 
-    </div>
-
-    <div class="card">
-        <h2>Wat kun je met Fix50?</h2>
-        <ul>
-            <li>Diagnoses uitvoeren op jouw scooter</li>
-            <li>Meerdere scooters opslaan in jouw account</li>
-            <li>Veelvoorkomende problemen bekijken</li>
-            <li>Een persoonlijk dashboard zoals in de app‑mockup</li>
-        </ul>
-    </div>
-
+    <p>Nog geen account? <a href="register.html">Registreren</a></p>
 </div>
 
+<script>
+const API_BASE = "https://fix50-backend-login-en-registratie.onrender.com";
+
+async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.token) {
+        localStorage.setItem("token", data.token);
+        location.href = "scooter.html";
+    } else {
+        alert(data.error);
+    }
+}
+</script>
 </body>
 </html>
-
