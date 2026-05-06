@@ -103,5 +103,28 @@ function authMiddleware(req, res, next) {
   res.json(userScooters);
 });
 
+app.post("/api/scooters", authMiddleware, (req, res) => {
+  const { naam, kenteken, km } = req.body;
+
+  if (!naam || !kenteken || !km)
+    return res.status(400).json({ error: "Alle velden verplicht" });
+
+  const scooters = loadJson("./scooters.json");
+
+  const newScooter = {
+    id: Date.now(),
+    naam,
+    kenteken,
+    km,
+    owner: req.user.email
+  };
+
+  scooters.push(newScooter);
+  saveJson("./scooters.json", scooters);
+
+  res.json({ success: true, scooter: newScooter });
+});
+
+
 }
 
