@@ -10,57 +10,18 @@ app.use(express.json());
 
 const SECRET = "fix50supersecret";
 const USERS_FILE = "./users.json";
-const SCOOTERS_FILE = "./scooters.json";
-const ONDERHOUD_FILE = "./onderhoud.json";
 
 /* ------------------------------
-   HELPERS: BESTANDEN LEZEN/SCHRIJVEN
+   USERS LADEN / OPSLAAN
 ------------------------------ */
 
-function loadJson(path) {
-  if (!fs.existsSync(path)) return [];
-  return JSON.parse(fs.readFileSync(path));
-}
-
-function saveJson(path, data) {
-  fs.writeFileSync(path, JSON.stringify(data, null, 2));
-}
-
 function loadUsers() {
-  return loadJson(USERS_FILE);
+  if (!fs.existsSync(USERS_FILE)) return [];
+  return JSON.parse(fs.readFileSync(USERS_FILE));
 }
 
 function saveUsers(users) {
-  saveJson(USERS_FILE, users);
-}
-
-function loadScooters() {
-  return loadJson(SCOOTERS_FILE);
-}
-
-function loadOnderhoud() {
-  return loadJson(ONDERHOUD_FILE);
-}
-
-/* ------------------------------
-   AUTH MIDDLEWARE
------------------------------- */
-
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.slice(7)
-    : null;
-
-  if (!token) return res.status(401).json({ error: "Geen token meegegeven" });
-
-  try {
-    const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // { email: ... }
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Ongeldige of verlopen token" });
-  }
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
 /* ------------------------------
@@ -82,8 +43,10 @@ app.post("/api/register", (req, res) => {
   users.push({ email, password: hashed });
   saveUsers(users);
 
+  // DIRECT TOKEN AANMAKEN
   const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
 
+  // DIRECT TERUGSTUREN
   res.json({
     success: true,
     token
@@ -108,32 +71,6 @@ app.post("/api/login", (req, res) => {
   const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
 
   res.json({ token });
-});
-
-/* ------------------------------
-   PROTECTED: SCOOTERS
------------------------------- */
-
-app.get("/api/scooters", authMiddleware, (req, res) => {
-  const scooters = loadScooters();
-
-  // eventueel filteren op user:
-  // const userScooters = scooters.filter(s => s.owner === req.user.email);
-
-  res.json(scooters);
-});
-
-/* ------------------------------
-   PROTECTED: ONDERHOUD
------------------------------- */
-
-app.get("/api/onderhoud", authMiddleware, (req, res) => {
-  const onderhoud = loadOnderhoud();
-
-  // eventueel filteren op user:
-  // const userOnderhoud = onderhoud.filter(o => o.owner === req.user.email);
-
-  res.json(onderhoud);
 });
 
 /* ------------------------------
