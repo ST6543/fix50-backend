@@ -13,10 +13,7 @@ const SECRET = "fix50supersecret";
 const USERS_FILE = "./users.json";
 const SCOOTERS_FILE = "./scooters.json";
 
-/* ------------------------------
-   HELPERS
------------------------------- */
-
+/* HELPERS */
 function loadJson(path) {
   if (!fs.existsSync(path)) return [];
   return JSON.parse(fs.readFileSync(path));
@@ -26,10 +23,7 @@ function saveJson(path, data) {
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 }
 
-/* ------------------------------
-   AUTH MIDDLEWARE
------------------------------- */
-
+/* AUTH MIDDLEWARE */
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Bearer "))
@@ -38,25 +32,18 @@ function authMiddleware(req, res, next) {
   try {
     const token = auth.split(" ")[1];
     const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // { email: ... }
+    req.user = decoded;
     next();
   } catch {
     return res.status(401).json({ error: "Ongeldige token" });
   }
 }
 
-/* ------------------------------
-   REGISTER (DIRECT INLOGGEN)
------------------------------- */
-
+/* REGISTER */
 app.post("/api/register", (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password)
-    return res.status(400).json({ error: "Email en wachtwoord verplicht" });
-
   const users = loadJson(USERS_FILE);
-
   if (users.find(u => u.email === email))
     return res.status(400).json({ error: "Gebruiker bestaat al" });
 
@@ -65,17 +52,10 @@ app.post("/api/register", (req, res) => {
   saveJson(USERS_FILE, users);
 
   const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
-
-  res.json({
-    success: true,
-    token
-  });
+  res.json({ success: true, token });
 });
 
-/* ------------------------------
-   LOGIN
------------------------------- */
-
+/* LOGIN */
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -88,29 +68,19 @@ app.post("/api/login", (req, res) => {
   if (!match) return res.status(400).json({ error: "Onjuiste gegevens" });
 
   const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
-
   res.json({ token });
 });
 
-/* ------------------------------
-   SCOOTERS OPHALEN (PER GEBRUIKER)
------------------------------- */
-
+/* SCOOTERS OPHALEN */
 app.get("/api/scooters", authMiddleware, (req, res) => {
   const scooters = loadJson(SCOOTERS_FILE);
   const userScooters = scooters.filter(s => s.owner === req.user.email);
   res.json(userScooters);
 });
 
-/* ------------------------------
-   SCOOTER TOEVOEGEN
------------------------------- */
-
+/* SCOOTER TOEVOEGEN */
 app.post("/api/scooters", authMiddleware, (req, res) => {
   const { naam, kenteken, km } = req.body;
-
-  if (!naam || !kenteken || !km)
-    return res.status(400).json({ error: "Alle velden verplicht" });
 
   const scooters = loadJson(SCOOTERS_FILE);
 
@@ -128,9 +98,37 @@ app.post("/api/scooters", authMiddleware, (req, res) => {
   res.json({ success: true, scooter: newScooter });
 });
 
-/* ------------------------------
-   SERVER STARTEN
------------------------------- */
+/* SCOOTER VERWIJDEREN */
+app.delete("/api/scooters/:id", authMiddleware, (req, res) => {
+  const id = Number(req.params.id);
 
+  let scooters = loadJson(SCOOTERS_FILE);
+  scooters = scooters.filter(s => !(s.id === id && s.owner === req.user.email));
+
+  saveJson(SCOOTERS_FILE, scooters);
+
+  res.json({ success: true });
+});
+
+/* SCOOTER BEWERKEN */
+app.put("/api/scooters/:id", authMiddleware, (req, res) => {
+  const id = Number(req.params.id);
+  const { naam, kenteken, km } = req.body;
+
+  const scooters = loadJson(SCOOTERS_FILE);
+  const scooter = scooters.find(s => s.id === id && s.owner === req.user.email);
+
+  if (!scooter) return res.status(404).json({ error: "Scooter niet gevonden" });
+
+  scooter.naam = naam;
+  scooter.kenteken = kenteken;
+  scooter.km = km;
+
+  saveJson(SCOOTERS_FILE, scooters);
+
+  res.json({ success: true, scooter });
+});
+
+/* SERVER START */
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("Fix50 backend draait op poort", port));
