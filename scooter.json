@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "naam": "Piaggio Zip",
+    "kenteken": "AB-123-B",
+    "km": 12000
+  },
+  {
+    "id": 2,
+    "naam": "Vespa Sprint",
+    "kenteken": "XY-987-Z",
+    "km": 8000
+  }
+]
