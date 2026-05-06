@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "scooter": "Piaggio Zip",
+    "datum": "2025-05-01",
+    "beschrijving": "Olie ververst, remmen gecontroleerd"
+  },
+  {
+    "id": 2,
+    "scooter": "Vespa Sprint",
+    "datum": "2025-04-20",
+    "beschrijving": "Nieuwe band achter"
+  }
+]
