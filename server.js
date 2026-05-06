@@ -9,19 +9,40 @@ app.use(cors());
 app.use(express.json());
 
 const SECRET = "fix50supersecret";
+
 const USERS_FILE = "./users.json";
+const SCOOTERS_FILE = "./scooters.json";
 
 /* ------------------------------
-   USERS LADEN / OPSLAAN
+   HELPERS
 ------------------------------ */
 
-function loadUsers() {
-  if (!fs.existsSync(USERS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(USERS_FILE));
+function loadJson(path) {
+  if (!fs.existsSync(path)) return [];
+  return JSON.parse(fs.readFileSync(path));
 }
 
-function saveUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+function saveJson(path, data) {
+  fs.writeFileSync(path, JSON.stringify(data, null, 2));
+}
+
+/* ------------------------------
+   AUTH MIDDLEWARE
+------------------------------ */
+
+function authMiddleware(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Bearer "))
+    return res.status(401).json({ error: "Geen token" });
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, SECRET);
+    req.user = decoded; // { email: ... }
+    next();
+  } catch {
+    return res.status(401).json({ error: "Ongeldige token" });
+  }
 }
 
 /* ------------------------------
@@ -34,19 +55,17 @@ app.post("/api/register", (req, res) => {
   if (!email || !password)
     return res.status(400).json({ error: "Email en wachtwoord verplicht" });
 
-  const users = loadUsers();
+  const users = loadJson(USERS_FILE);
 
   if (users.find(u => u.email === email))
     return res.status(400).json({ error: "Gebruiker bestaat al" });
 
   const hashed = bcrypt.hashSync(password, 10);
   users.push({ email, password: hashed });
-  saveUsers(users);
+  saveJson(USERS_FILE, users);
 
-  // DIRECT TOKEN AANMAKEN
   const token = jwt.sign({ email }, SECRET, { expiresIn: "7d" });
 
-  // DIRECT TERUGSTUREN
   res.json({
     success: true,
     token
@@ -60,7 +79,7 @@ app.post("/api/register", (req, res) => {
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
-  const users = loadUsers();
+  const users = loadJson(USERS_FILE);
   const user = users.find(u => u.email === email);
 
   if (!user) return res.status(400).json({ error: "Onjuiste gegevens" });
@@ -74,34 +93,18 @@ app.post("/api/login", (req, res) => {
 });
 
 /* ------------------------------
-   SERVER STARTEN
+   SCOOTERS OPHALEN (PER GEBRUIKER)
 ------------------------------ */
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log("Fix50 backend draait op poort", port));
-
-/* ------------------------------
-   AUTH MIDDLEWARE
------------------------------- */
-function authMiddleware(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith("Bearer "))
-    return res.status(401).json({ error: "Geen token" });
-
-  try {
-    const token = auth.split(" ")[1];
-    const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // email
-    next();
-  } catch {
-    return res.status(401).json({ error: "Ongeldige token" });
-  }
-
-   app.get("/api/scooters", authMiddleware, (req, res) => {
-  const scooters = loadJson("./scooters.json");
+app.get("/api/scooters", authMiddleware, (req, res) => {
+  const scooters = loadJson(SCOOTERS_FILE);
   const userScooters = scooters.filter(s => s.owner === req.user.email);
   res.json(userScooters);
 });
+
+/* ------------------------------
+   SCOOTER TOEVOEGEN
+------------------------------ */
 
 app.post("/api/scooters", authMiddleware, (req, res) => {
   const { naam, kenteken, km } = req.body;
@@ -109,7 +112,7 @@ app.post("/api/scooters", authMiddleware, (req, res) => {
   if (!naam || !kenteken || !km)
     return res.status(400).json({ error: "Alle velden verplicht" });
 
-  const scooters = loadJson("./scooters.json");
+  const scooters = loadJson(SCOOTERS_FILE);
 
   const newScooter = {
     id: Date.now(),
@@ -120,11 +123,14 @@ app.post("/api/scooters", authMiddleware, (req, res) => {
   };
 
   scooters.push(newScooter);
-  saveJson("./scooters.json", scooters);
+  saveJson(SCOOTERS_FILE, scooters);
 
   res.json({ success: true, scooter: newScooter });
 });
 
+/* ------------------------------
+   SERVER STARTEN
+------------------------------ */
 
-}
-
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log("Fix50 backend draait op poort", port));
