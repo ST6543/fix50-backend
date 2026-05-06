@@ -96,5 +96,12 @@ function authMiddleware(req, res, next) {
   } catch {
     return res.status(401).json({ error: "Ongeldige token" });
   }
+
+   app.get("/api/scooters", authMiddleware, (req, res) => {
+  const scooters = loadJson("./scooters.json");
+  const userScooters = scooters.filter(s => s.owner === req.user.email);
+  res.json(userScooters);
+});
+
 }
 
