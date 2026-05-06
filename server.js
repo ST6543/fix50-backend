@@ -79,3 +79,22 @@ app.post("/api/login", (req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("Fix50 backend draait op poort", port));
+
+/* ------------------------------
+   AUTH MIDDLEWARE
+------------------------------ */
+function authMiddleware(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Bearer "))
+    return res.status(401).json({ error: "Geen token" });
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, SECRET);
+    req.user = decoded; // email
+    next();
+  } catch {
+    return res.status(401).json({ error: "Ongeldige token" });
+  }
+}
+
