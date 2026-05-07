@@ -144,7 +144,40 @@ app.put("/api/scooters/:id", authMiddleware, (req, res) => {
 ------------------------------ */
 
 const MAINTENANCE_RULES = [
-  // (regels blijven hetzelfde)
+  { onderdeel: "Bougie", type: "2T", minKm: 2000, maxKm: 4000, info: "2T vervuilt sneller" },
+  { onderdeel: "Luchtfilter reinigen", type: "2T", minKm: 1000, maxKm: 2000, info: "Foam filters vaker reinigen" },
+  { onderdeel: "Luchtfilter vervangen", type: "2T", minKm: 6000, maxKm: 8000, info: "" },
+  { onderdeel: "V-snaar", type: "2T", minKm: 8000, maxKm: 12000, info: "" },
+  { onderdeel: "Rollen", type: "2T", minKm: 4000, maxKm: 6000, info: "Platte rollen = slecht optrekken" },
+  { onderdeel: "Koppeling reinigen", type: "2T", minKm: 6000, maxKm: 10000, info: "" },
+  { onderdeel: "Koppeling vervangen", type: "2T", minKm: 15000, maxKm: 25000, info: "" },
+  { onderdeel: "Carburateur reinigen", type: "2T", minKm: 3000, maxKm: 5000, info: "2T sproeiers vervuilen sneller" },
+  { onderdeel: "Zuiger + zuigerveren", type: "2T", minKm: 8000, maxKm: 12000, info: "Bij sportcilinders soms 5000 km" },
+  { onderdeel: "Krukaslagers", type: "2T", minKm: 20000, maxKm: 30000, info: "" },
+  { onderdeel: "Keerringen", type: "2T", minKm: 10000, maxKm: 20000, info: "" },
+  { onderdeel: "Oliepomp afstellen", type: "2T", minKm: 6000, maxKm: 6000, info: "Alleen bij modellen met pomp" },
+  { onderdeel: "Uitlaat ontkolen", type: "2T", minKm: 8000, maxKm: 12000, info: "2T uitlaten raken verstopt" },
+
+  { onderdeel: "Motorolie", type: "4T", minKm: 2000, maxKm: 3000, info: "Belangrijkste onderhoud" },
+  { onderdeel: "Oliefilter", type: "4T", minKm: 4000, maxKm: 6000, info: "Niet alle 4T hebben filter" },
+  { onderdeel: "Bougie", type: "4T", minKm: 4000, maxKm: 6000, info: "4T vervuilt minder snel" },
+  { onderdeel: "Klepspeling stellen", type: "4T", minKm: 4000, maxKm: 6000, info: "GY6 gevoelig" },
+  { onderdeel: "Luchtfilter reinigen", type: "4T", minKm: 2000, maxKm: 4000, info: "" },
+  { onderdeel: "Luchtfilter vervangen", type: "4T", minKm: 8000, maxKm: 10000, info: "" },
+  { onderdeel: "V-snaar", type: "4T", minKm: 10000, maxKm: 15000, info: "" },
+  { onderdeel: "Rollen", type: "4T", minKm: 6000, maxKm: 8000, info: "" },
+  { onderdeel: "Koppeling reinigen", type: "4T", minKm: 8000, maxKm: 12000, info: "" },
+  { onderdeel: "Koppeling vervangen", type: "4T", minKm: 20000, maxKm: 30000, info: "" },
+  { onderdeel: "Carburateur reinigen", type: "4T", minKm: 5000, maxKm: 8000, info: "" },
+  { onderdeel: "Kleppen/nokkenasketting inspecteren", type: "4T", minKm: 10000, maxKm: 15000, info: "" },
+
+  { onderdeel: "Remblokken", type: "Universeel", minKm: 5000, maxKm: 10000, info: "Afhankelijk van rijstijl" },
+  { onderdeel: "Remschijven", type: "Universeel", minKm: 20000, maxKm: 40000, info: "" },
+  { onderdeel: "Banden", type: "Universeel", minKm: 8000, maxKm: 15000, info: "Of 4 jaar" },
+  { onderdeel: "Accu", type: "Universeel", minKm: null, maxKm: null, info: "2-4 jaar" },
+  { onderdeel: "Wiellagers", type: "Universeel", minKm: 15000, maxKm: 25000, info: "" },
+  { onderdeel: "Balhoofdlagers", type: "Universeel", minKm: 15000, maxKm: 25000, info: "" },
+  { onderdeel: "Schokdempers", type: "Universeel", minKm: 20000, maxKm: 30000, info: "" }
 ];
 
 /* BEREKEN ONDERHOUD */
@@ -234,58 +267,4 @@ async function sendMaintenanceMail(to, adviezen) {
   if (dringende.length === 0) return;
 
   const lines = dringende.map(a =>
-    `- ${a.onderdeel}: ${a.status}, datum: ${a.datum}, nog: ${a.kmNog ?? "-"} km`
-  );
-
-  const text = [
-    "Je scooter heeft binnenkort onderhoud nodig:",
-    "",
-    ...lines,
-    "",
-    "Groeten,",
-    "Fix50"
-  ].join("\n");
-
-  await resend.emails.send({
-    from: "Fix50 <noreply@fix50.nl>",
-    to,
-    subject: "Fix50 onderhoudsherinnering",
-    text
-  });
-}
-
-/* DAILY CHECK */
-app.post("/api/maintenance/check-and-mail", async (req, res) => {
-  const settings = loadJson(MAINT_SETTINGS_FILE);
-  const users = loadJson(USERS_FILE);
-
-  for (const s of settings) {
-    const user = users.find(u => u.email === s.email);
-    if (!user) continue;
-
-    const adviezen = berekenOnderhoudBackend(s);
-    await sendMaintenanceMail(s.email, adviezen);
-  }
-
-  res.json({ success: true });
-});
-
-/* TEST MAIL */
-app.get("/api/test-mail", async (req, res) => {
-  try {
-    await resend.emails.send({
-      from: "Fix50 <noreply@fix50.nl>",
-      to: "ste.langius@outlook.com",
-      subject: "Fix50 testmail",
-      text: "Als je dit ontvangt werkt Resend perfect!"
-    });
-
-    res.json({ success: true, message: "Mail verstuurd!" });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
-});
-
-/* SERVER START */
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log("Fix50 backend draait op poort", port));
+    `- ${a.onderdeel}:
