@@ -318,3 +318,18 @@ app.post("/api/maintenance/check-and-mail", async (req, res) => {
 /* SERVER START */
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("Fix50 backend draait op poort", port));
+
+app.get("/api/test-mail", async (req, res) => {
+  try {
+    await resend.emails.send({
+      from: "Fix50 <noreply@fix50.nl>",
+      to: "ste.langius@outlook.com",
+      subject: "Fix50 testmail",
+      text: "Als je dit ontvangt werkt Resend perfect!"
+    });
+
+    res.json({ success: true, message: "Mail verstuurd!" });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
