@@ -312,13 +312,6 @@ app.post("/api/maintenance/check-and-mail", async (req, res) => {
     await sendMaintenanceMail(s.email, adviezen);
   }
 
-  res.json({ success: true });
-});
-
-/* SERVER START */
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log("Fix50 backend draait op poort", port));
-
 app.get("/api/test-mail", async (req, res) => {
   try {
     await resend.emails.send({
@@ -333,3 +326,7 @@ app.get("/api/test-mail", async (req, res) => {
     res.json({ success: false, error: err.message });
   }
 });
+
+/* SERVER START */
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log("Fix50 backend draait op poort", port));
