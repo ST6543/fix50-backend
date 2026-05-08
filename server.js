@@ -267,8 +267,8 @@ async function sendMaintenanceMail(to, adviezen) {
   if (dringende.length === 0) return;
 
   const lines = dringende.map(a =>
-    `- ${a.onderdeel}: ${a.status}, datum: ${a.datum}, nog: ${a.kmNog ?? "-"} km`
-  );
+  `- ${a.onderdeel}: ${a.status}, datum: ${a.datum}, nog: ${a.kmNog ?? "-"} km`
+);
 
   const text = [
     "Je scooter heeft binnenkort onderhoud nodig:",
