@@ -267,4 +267,58 @@ async function sendMaintenanceMail(to, adviezen) {
   if (dringende.length === 0) return;
 
   const lines = dringende.map(a =>
-    `- ${a.onderdeel}:
+    `- ${a.onderdeel}: ${a.status}, datum: ${a.datum}, nog: ${a.kmNog ?? "-"} km`
+  );
+
+  const text = [
+    "Je scooter heeft binnenkort onderhoud nodig:",
+    "",
+    ...lines,
+    "",
+    "Groeten,",
+    "Fix50"
+  ].join("\n");
+
+  await resend.emails.send({
+    from: "Fix50 <noreply@fix50.nl>",
+    to,
+    subject: "Fix50 onderhoudsherinnering",
+    text
+  });
+}
+
+/* DAILY CHECK */
+app.post("/api/maintenance/check-and-mail", async (req, res) => {
+  const settings = loadJson(MAINT_SETTINGS_FILE);
+  const users = loadJson(USERS_FILE);
+
+  for (const s of settings) {
+    const user = users.find(u => u.email === s.email);
+    if (!user) continue;
+
+    const adviezen = berekenOnderhoudBackend(s);
+    await sendMaintenanceMail(s.email, adviezen);
+  }
+
+  res.json({ success: true });
+});
+
+/* TEST MAIL */
+app.get("/api/test-mail", async (req, res) => {
+  try {
+    await resend.emails.send({
+      from: "Fix50 <noreply@fix50.nl>",
+      to: "ste.langius@outlook.com",
+      subject: "Fix50 testmail",
+      text: "Als je dit ontvangt werkt Resend perfect!"
+    });
+
+    res.json({ success: true, message: "Mail verstuurd!" });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
+/* SERVER START */
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log("Fix50 backend draait op poort", port));
