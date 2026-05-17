@@ -91,10 +91,13 @@ app.get("/api/scooters", authMiddleware, (req, res) => {
 
 /* SCOOTER TOEVOEGEN */
 app.post("/api/scooters", authMiddleware, (req, res) => {
-  let { naam, kenteken, km } = req.body;
+  let { naam, kenteken, km, type } = req.body;
 
-  if (!naam || !kenteken)
+  if (!naam || !kenteken || !type)
     return res.status(400).json({ error: "Alle velden verplicht" });
+
+  if (type !== "2T" && type !== "4T")
+    return res.status(400).json({ error: "Type moet 2T of 4T zijn" });
 
   km = Number(km);
   if (isNaN(km) || km < 0)
@@ -107,6 +110,7 @@ app.post("/api/scooters", authMiddleware, (req, res) => {
     naam,
     kenteken,
     km,
+    type,
     owner: req.user.email
   };
 
@@ -136,15 +140,18 @@ app.delete("/api/scooters/:id", authMiddleware, (req, res) => {
 /* SCOOTER BEWERKEN */
 app.put("/api/scooters/:id", authMiddleware, (req, res) => {
   const id = Number(req.params.id);
-  let { naam, kenteken, km } = req.body;
+  let { naam, kenteken, km, type } = req.body;
 
   const scooters = loadJson(SCOOTERS_FILE);
   const scooter = scooters.find(s => s.id === id && s.owner === req.user.email);
 
   if (!scooter) return res.status(404).json({ error: "Scooter niet gevonden" });
 
-  if (!naam || !kenteken)
+  if (!naam || !kenteken || !type)
     return res.status(400).json({ error: "Alle velden verplicht" });
+
+  if (type !== "2T" && type !== "4T")
+    return res.status(400).json({ error: "Type moet 2T of 4T zijn" });
 
   km = Number(km);
   if (isNaN(km) || km < 0)
@@ -153,6 +160,7 @@ app.put("/api/scooters/:id", authMiddleware, (req, res) => {
   scooter.naam = naam;
   scooter.kenteken = kenteken;
   scooter.km = km;
+  scooter.type = type;
 
   saveJson(SCOOTERS_FILE, scooters);
 
@@ -200,7 +208,7 @@ const MAINTENANCE_RULES = [
   { onderdeel: "Schokdempers", type: "Universeel", minKm: 20000, maxKm: 30000, info: "" }
 ];
 
-/* BEREKEN ONDERHOUD */
+/* BEREKEN ONDERHOUD (km/week) */
 function berekenOnderhoudBackend({ kmPerWeek, huidigeKm, type }) {
   const nu = new Date();
 
@@ -240,7 +248,39 @@ function berekenOnderhoudBackend({ kmPerWeek, huidigeKm, type }) {
     .sort((a, b) => (a.kmNog ?? 999999) - (b.kmNog ?? 999999));
 }
 
-/* INSTELLINGEN OPSLAAN */
+/* NIEUWE: DIRECT ADVIES + MAIL OP BASIS VAN KM/DAG */
+app.post("/api/maintenance/calc", authMiddleware, async (req, res) => {
+  const { scooter, huidigeKm, type, kmPerDag } = req.body;
+
+  const kmPerWeek = kmPerDag * 7;
+  const adviezen = berekenOnderhoudBackend({
+    kmPerWeek,
+    huidigeKm,
+    type
+  });
+
+  try {
+    await resend.emails.send({
+      from: "Fix50 <noreply@fix50.nl>",
+      to: req.user.email,
+      subject: `Onderhoudsadvies voor ${scooter}`,
+      text: adviezen.map(a =>
+        `${a.onderdeel} – ${a.status}
+Nog: ${a.kmNog} km
+Datum: ${a.datum}
+Info: ${a.info}
+
+`
+      ).join("")
+    });
+  } catch (err) {
+    console.error("MAIL FOUT:", err);
+  }
+
+  res.json({ adviezen });
+});
+
+/* INSTELLINGEN OPSLAAN (oude weekly engine – mag blijven) */
 app.post("/api/maintenance/settings", authMiddleware, (req, res) => {
   let { kmPerWeek, huidigeKm, type } = req.body;
 
@@ -274,7 +314,7 @@ app.post("/api/maintenance/settings", authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-/* ADVIES OPVRAGEN */
+/* ADVIES OPVRAGEN (oude weekly engine) */
 app.get("/api/maintenance/advice", authMiddleware, (req, res) => {
   const settings = loadJson(MAINT_SETTINGS_FILE);
   const userSettings = settings.find(s => s.email === req.user.email);
