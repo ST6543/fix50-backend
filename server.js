@@ -78,6 +78,10 @@ app.post("/api/login", (req, res) => {
   res.json({ token });
 });
 
+/* ============================================
+   SCOOTERS
+============================================ */
+
 /* SCOOTERS OPHALEN */
 app.get("/api/scooters", authMiddleware, (req, res) => {
   const scooters = loadJson(SCOOTERS_FILE);
@@ -87,10 +91,16 @@ app.get("/api/scooters", authMiddleware, (req, res) => {
 
 /* SCOOTER TOEVOEGEN */
 app.post("/api/scooters", authMiddleware, (req, res) => {
-  const { naam, kenteken, km } = req.body;
+  let { naam, kenteken, km } = req.body;
 
-  if (!naam || !kenteken || !km)
+  // Basisvalidatie
+  if (!naam || !kenteken)
     return res.status(400).json({ error: "Alle velden verplicht" });
+
+  // km netjes naar nummer
+  km = Number(km);
+  if (isNaN(km) || km < 0)
+    return res.status(400).json({ error: "Ongeldige kilometerstand" });
 
   const scooters = loadJson(SCOOTERS_FILE);
 
@@ -113,7 +123,12 @@ app.delete("/api/scooters/:id", authMiddleware, (req, res) => {
   const id = Number(req.params.id);
 
   let scooters = loadJson(SCOOTERS_FILE);
+  const before = scooters.length;
+
   scooters = scooters.filter(s => !(s.id === id && s.owner === req.user.email));
+
+  if (scooters.length === before)
+    return res.status(404).json({ error: "Scooter niet gevonden" });
 
   saveJson(SCOOTERS_FILE, scooters);
 
@@ -123,12 +138,19 @@ app.delete("/api/scooters/:id", authMiddleware, (req, res) => {
 /* SCOOTER BEWERKEN */
 app.put("/api/scooters/:id", authMiddleware, (req, res) => {
   const id = Number(req.params.id);
-  const { naam, kenteken, km } = req.body;
+  let { naam, kenteken, km } = req.body;
 
   const scooters = loadJson(SCOOTERS_FILE);
   const scooter = scooters.find(s => s.id === id && s.owner === req.user.email);
 
   if (!scooter) return res.status(404).json({ error: "Scooter niet gevonden" });
+
+  if (!naam || !kenteken)
+    return res.status(400).json({ error: "Alle velden verplicht" });
+
+  km = Number(km);
+  if (isNaN(km) || km < 0)
+    return res.status(400).json({ error: "Ongeldige kilometerstand" });
 
   scooter.naam = naam;
   scooter.kenteken = kenteken;
@@ -139,9 +161,9 @@ app.put("/api/scooters/:id", authMiddleware, (req, res) => {
   res.json({ success: true, scooter });
 });
 
-/* ------------------------------
+/* ============================================
    ONDERHOUD ENGINE
------------------------------- */
+============================================ */
 
 const MAINTENANCE_RULES = [
   { onderdeel: "Bougie", type: "2T", minKm: 2000, maxKm: 4000, info: "2T vervuilt sneller" },
@@ -199,8 +221,8 @@ function berekenOnderhoudBackend({ kmPerWeek, huidigeKm, type }) {
 
       const volgendeKm = rule.minKm;
       const kmNog = Math.max(0, volgendeKm - huidigeKm);
-      const weken = kmNog / kmPerWeek;
-      const dagen = Math.round(weken * 7);
+      const weken = kmPerWeek > 0 ? kmNog / kmPerWeek : Infinity;
+      const dagen = isFinite(weken) ? Math.round(weken * 7) : 365 * 10;
       const datum = new Date(nu.getTime() + dagen * 86400000);
 
       let status;
@@ -212,7 +234,7 @@ function berekenOnderhoudBackend({ kmPerWeek, huidigeKm, type }) {
       return {
         ...rule,
         kmNog,
-        weken: Number(weken.toFixed(1)),
+        weken: isFinite(weken) ? Number(weken.toFixed(1)) : null,
         datum: datum.toISOString().slice(0, 10),
         status
       };
@@ -222,10 +244,16 @@ function berekenOnderhoudBackend({ kmPerWeek, huidigeKm, type }) {
 
 /* INSTELLINGEN OPSLAAN */
 app.post("/api/maintenance/settings", authMiddleware, (req, res) => {
-  const { kmPerWeek, huidigeKm, type } = req.body;
+  let { kmPerWeek, huidigeKm, type } = req.body;
 
   if (!kmPerWeek || !huidigeKm || !type)
     return res.status(400).json({ error: "Alle velden verplicht" });
+
+  kmPerWeek = Number(kmPerWeek);
+  huidigeKm = Number(huidigeKm);
+
+  if (isNaN(kmPerWeek) || kmPerWeek <= 0 || isNaN(huidigeKm) || huidigeKm < 0)
+    return res.status(400).json({ error: "Ongeldige waardes" });
 
   const settings = loadJson(MAINT_SETTINGS_FILE);
 
@@ -267,8 +295,8 @@ async function sendMaintenanceMail(to, adviezen) {
   if (dringende.length === 0) return;
 
   const lines = dringende.map(a =>
-  `- ${a.onderdeel}: ${a.status}, datum: ${a.datum}, nog: ${a.kmNog ?? "-"} km`
-);
+    `- ${a.onderdeel}: ${a.status}, datum: ${a.datum}, nog: ${a.kmNog ?? "-"} km`
+  );
 
   const text = [
     "Je scooter heeft binnenkort onderhoud nodig:",
