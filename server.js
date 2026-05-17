@@ -93,11 +93,9 @@ app.get("/api/scooters", authMiddleware, (req, res) => {
 app.post("/api/scooters", authMiddleware, (req, res) => {
   let { naam, kenteken, km } = req.body;
 
-  // Basisvalidatie
   if (!naam || !kenteken)
     return res.status(400).json({ error: "Alle velden verplicht" });
 
-  // km netjes naar nummer
   km = Number(km);
   if (isNaN(km) || km < 0)
     return res.status(400).json({ error: "Ongeldige kilometerstand" });
